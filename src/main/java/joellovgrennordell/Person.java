@@ -1,11 +1,12 @@
 package joellovgrennordell;
+import java.util.Date;
 
 public class Person {
     private int id;
-    private int age;
+    private Date age;
     private String name;
 
-    public Person(int id, int age, String name) {
+    public Person(int id, Date age, String name) {
         this.id = id;
         this.age = age;
         this.name = name;
@@ -15,7 +16,7 @@ public class Person {
         return id;
     }
 
-    public int getAge() {
+    public Date getAge() {
         return age;
     }
 
