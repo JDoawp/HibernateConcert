@@ -28,7 +28,7 @@ public class Controller {
         peopleList.add("Ben Dover");
         peopleList.add("Jhon Doe");
         peopleList.add("Mike Hunt");
-        lvSelectedPeople.setItems(concertList);
+        lvSelectedPeople.setItems(peopleList);
 
     }
 }
