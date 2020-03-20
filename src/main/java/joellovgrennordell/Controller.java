@@ -126,7 +126,24 @@ public class Controller {
     }
 
     public void btnAddPerson(){
+        EntityManager em = ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityTransaction et = null;
+        try{
+            et = em.getTransaction();
+            et.begin();
+            Date age = Date.valueOf(dateAge.getValue());
+            Person person = new Person(personList.size(), age, txtName.getText());
+            em.persist(person);
+            et.commit();
+        }catch (Exception ex){
+            if(et != null){
+                et.rollback();
+            }
 
+            ex.printStackTrace();
+        }finally {
+            em.close();
+        }
 
 
 
