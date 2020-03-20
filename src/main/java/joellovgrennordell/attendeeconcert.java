@@ -1,6 +1,4 @@
 package joellovgrennordell;
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.*;
 import java.io.Serializable;
 
@@ -11,17 +9,17 @@ public class attendeeconcert implements Serializable{
     @Id
 
     @Column(name = "attendeeID")
-    private int attendeeID;
+    private int personID;
 
     @Column(name = "concertID")
     private int concertID;
 
-    public int getAttendeeID() {
-        return attendeeID;
+    public int getPersonID() {
+        return personID;
     }
 
-    public void setAttendeeID(int attendeeID) {
-        this.attendeeID = attendeeID;
+    public void setPersonID(int attendeeID) {
+        this.personID = attendeeID;
     }
 
     public int getConcertID() {
