@@ -144,16 +144,5 @@ public class Controller {
         }finally {
             em.close();
         }
-
-
-
-        int id = personList.size();
-        Date age = Date.valueOf(dateAge.getValue());
-
-        personList.add(new Person(id, age, txtName.getText()));
-
-        peopleObsList.add(personList.get(id).getName());
-        lvAttendees.setItems(peopleObsList);
-        lvPeople.setItems(peopleObsList);
     }
 }
