@@ -1,29 +1,28 @@
 package joellovgrennordell;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.io.Serializable;
 import java.sql.Date;
 
 @Entity
-@Table(name = "attendees")
-public class Person {
+@Table(name = "person")
+public class person implements Serializable{
     private static final long serialVersionUID = 1L;
 
-    public Person(int id, Date age, String name) {
+    public person(int id, Date age, String name) {
         this.id = id;
         this.age = age;
         this.name = name;
     }
 
-    public Person(){
+    public person(){
 
     }
 
     @Id
-
-    @Column(name = "idattendees", unique = true, nullable = false)
+    @Column(name = "idperson", unique = true, nullable = false)
     private int id;
 
     @Column(name = "age", nullable = false)
@@ -43,5 +42,14 @@ public class Person {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return "person{" +
+                "id=" + id +
+                ", age=" + age +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

@@ -5,9 +5,6 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,7 +27,7 @@ public class Controller {
     public DatePicker dateDate;
     public ListView<String> lvConcerts;
     public ListView<String> lvAttendees;
-    private List<Concert> concertList = new ArrayList<>();
+    private List<concert> concertList = em.createQuery("SELECT c FROM concert AS c").getResultList();
     private ObservableList<String> concertObsList = FXCollections.observableArrayList();
 
     //People tab
@@ -38,7 +35,7 @@ public class Controller {
     public DatePicker dateAge;
     public ListView<String> lvPeople;
     public ListView<String> lvAtConcerts;
-    private List<Person> personList = new ArrayList<>();
+    private List<person> personList = em.createQuery("SELECT a FROM person AS a").getResultList();
     private ObservableList<String> peopleObsList = FXCollections.observableArrayList();
 
     public void initialize(){
@@ -46,7 +43,6 @@ public class Controller {
         lvAttendees.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         listViewHandler(lvAtConcerts);
         listViewHandler(lvAttendees);
-
 
         lvPeople.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             //highlightConcerts(lvPeople.getSelectionModel().getSelectedIndex());
@@ -59,10 +55,9 @@ public class Controller {
             System.out.println(attendeeconcert.getAttendeeID()  +" " + attendeeconcert.getConcertID());
         }
 
-        lvAtConcerts.setItems(concertObsList);
-        lvConcerts.setItems(concertObsList);
-        lvAttendees.setItems(peopleObsList);
-        lvPeople.setItems(peopleObsList);
+
+
+        updateListings();
     }
 
     //Adds an eventHandler to a given listview so each item will act more like a checkbox / toggle button
@@ -115,25 +110,15 @@ public class Controller {
 
 
     public void btnAddConcert() {
-        int id = concertList.size();
-        Date date = Date.valueOf(dateDate.getValue());
-
-        concertList.add(new Concert(id, date, txtArtist.getText()));
-
-        concertObsList.add(concertList.get(id).getArtist());
-        lvAtConcerts.setItems(concertObsList);
-        lvConcerts.setItems(concertObsList);
-    }
-
-    public void btnAddPerson(){
         EntityManager em = ENTITY_MANAGER_FACTORY.createEntityManager();
         EntityTransaction et = null;
         try{
             et = em.getTransaction();
             et.begin();
-            Date age = Date.valueOf(dateAge.getValue());
-            Person person = new Person(personList.size(), age, txtName.getText());
-            em.persist(person);
+            Date date = Date.valueOf(dateDate.getValue());
+            concertList.add(new concert(concertList.size()+1, date, txtArtist.getText()));
+            System.out.println("New Concert added: " +concertList.get(concertList.size()-1).toString());
+            em.persist(concertList.get(concertList.size()-1));
             et.commit();
         }catch (Exception ex){
             if(et != null){
@@ -143,6 +128,50 @@ public class Controller {
             ex.printStackTrace();
         }finally {
             em.close();
+            updateListings();
         }
+    }
+
+    public void btnAddPerson(){
+        EntityManager em = ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityTransaction et = null;
+        try{
+            et = em.getTransaction();
+            et.begin();
+            Date age = Date.valueOf(dateAge.getValue());
+            personList.add(new person(personList.size()+1, age, txtName.getText()));
+            System.out.println("New person added: " +personList.get(personList.size()-1).toString());
+            em.persist(personList.get(personList.size()-1));
+            et.commit();
+        }catch (Exception ex){
+            if(et != null){
+                et.rollback();
+            }
+
+            ex.printStackTrace();
+        }finally {
+            em.close();
+            updateListings();
+        }
+    }
+
+    private void updateListings(){
+        concertObsList.clear();
+        for (joellovgrennordell.concert concert : concertList) {
+            concertObsList.add(concert.getArtist());
+            System.out.println("Listing updated: " +concert.toString());
+        }
+
+        peopleObsList.clear();
+        for (joellovgrennordell.person person : personList) {
+            peopleObsList.add(person.getName());
+            System.out.println("Listing updated: " +person.toString());
+        }
+
+
+        lvAtConcerts.setItems(concertObsList);
+        lvConcerts.setItems(concertObsList);
+        lvAttendees.setItems(peopleObsList);
+        lvPeople.setItems(peopleObsList);
     }
 }
