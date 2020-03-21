@@ -6,9 +6,8 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 
-import java.text.SimpleDateFormat;
+import java.sql.*;
 import java.util.ArrayList;
-import java.sql.Date;
 import java.util.List;
 import javax.persistence.*;
 
@@ -45,23 +44,7 @@ public class Controller {
         listViewHandler(lvAtConcerts);
         listViewHandler(lvAttendees);
 
-        List<attendeeconcert> tempPersonConcertList = em.createQuery("SELECT a FROM attendeeconcert AS a").getResultList();
-
-        for(int i = 0; i < tempPersonConcertList.size(); i++){
-            if(tempPersonConcertList.get(i).getPersonID() != personconcertList.size()) {
-                personconcertList.add(new ArrayList<>());
-            }
-            personconcertList.get(personconcertList.size()-1).add(tempPersonConcertList.get(i).getConcertID());
-
-        }
-
-        for(int i = 0; i < tempPersonConcertList.size(); i++){
-            if(tempPersonConcertList.get(i).getConcertID() != concertpersonList.size()) {
-                concertpersonList.add(new ArrayList<>());
-            }
-            concertpersonList.get(concertpersonList.size()-1).add(tempPersonConcertList.get(i).getPersonID());
-
-        }
+        attendeeconcertLoad();
 
         lvPeople.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             highlightConcerts(lvPeople.getSelectionModel().getSelectedIndex());
@@ -69,8 +52,8 @@ public class Controller {
         lvConcerts.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             System.out.println("Highlight Sent: " +lvConcerts.getSelectionModel().getSelectedIndex());
             highlightAttendees(lvConcerts.getSelectionModel().getSelectedIndex());
-        });
 
+        });
 
         updateListings();
     }
@@ -109,10 +92,10 @@ public class Controller {
         });
     }
 
-
     private void highlightAttendees(int concert){
         try {
             System.out.println("Highlighting attendees for: " + concert + " personconcertList Size: " + concertpersonList.get(concert).size());
+            lvAttendees.getSelectionModel().clearSelection();
             for (int i = 0; i < concertpersonList.get(concert).size(); i++) {
                 int personID = concertpersonList.get(concert).get(i) - 1;
                 lvAttendees.getSelectionModel().select(personID);
@@ -127,6 +110,7 @@ public class Controller {
     private void highlightConcerts(int person){
         try {
             System.out.println("Highlighting all from: " + person + " personconcertList Size: " + personconcertList.get(person).size());
+            lvAtConcerts.getSelectionModel().clearSelection();
             for (int i = 0; i < personconcertList.get(person).size(); i++) {
                 int concertID = personconcertList.get(person).get(i) - 1;
                 lvAtConcerts.getSelectionModel().select(concertID);
@@ -138,7 +122,75 @@ public class Controller {
         }
     }
 
+    private void attendeeconcertLoad(){
+        List<attendeeconcert> tempPersonConcertList = new ArrayList<>();
 
+        //This entire SQL thing is used because the other commented Hibernate JPA thing doesn't work, the list it gets is wrong and I cannot figure out why. This SQL works though.
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost/hibernateconcert", "javauser", "java");
+            Statement st = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            String sql = "SELECT * FROM attendeeconcert ORDER BY personID";
+            ResultSet result = st.executeQuery(sql);
+            while (result.next()) {
+                tempPersonConcertList.add(new attendeeconcert(result.getInt("personID"), result.getInt("concertID")));
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        //tempPersonConcertList = em.createQuery("SELECT a FROM attendeeconcert AS a ORDER BY a.personID").getResultList();
+        personconcertList.clear();
+        concertpersonList.clear();
+        System.out.println("List gotten: ");
+        for(int i = 0; i < tempPersonConcertList.size(); i++){
+            System.out.println("    PersonID: " +tempPersonConcertList.get(i).getPersonID() +" ConcertID: " +tempPersonConcertList.get(i).getConcertID());
+        }
+
+        for(int i = 0; i < tempPersonConcertList.size(); i++){
+            if(tempPersonConcertList.get(i).getPersonID() != personconcertList.size()) {
+                personconcertList.add(new ArrayList<>());
+            }
+            personconcertList.get(personconcertList.size()-1).add(tempPersonConcertList.get(i).getConcertID());
+
+        }
+
+        for(int i = 0; i < tempPersonConcertList.size(); i++){
+            if(tempPersonConcertList.get(i).getConcertID() != concertpersonList.size()) {
+                concertpersonList.add(new ArrayList<>());
+            }
+            concertpersonList.get(concertpersonList.size()-1).add(tempPersonConcertList.get(i).getPersonID());
+
+        }
+    }
+
+    private void changeAttendee(int personID, int concertID, boolean remove){
+        System.out.println("Got: " +personID +", " +concertID +" remove: " +remove);
+        EntityManager em = ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityTransaction et = null;
+
+        try{
+            et = em.getTransaction();
+            et.begin();
+            attendeeconcert ac = new attendeeconcert(personID, concertID);
+                if(remove){
+                    em.remove(ac);
+                    System.out.println("Removed: " +ac.toString());
+                }else{
+                    em.persist(ac);
+                    System.out.println("Added: " +ac.toString());
+                }
+
+                et.commit();
+        }catch (Exception ex){
+            if(et != null){
+                et.rollback();
+            }
+            ex.printStackTrace();
+        }finally {
+            em.close();
+            attendeeconcertLoad();
+        }
+    }
 
     public void btnAddConcert() {
         EntityManager em = ENTITY_MANAGER_FACTORY.createEntityManager();
@@ -204,5 +256,19 @@ public class Controller {
         lvConcerts.setItems(concertObsList);
         lvAttendees.setItems(peopleObsList);
         lvPeople.setItems(peopleObsList);
+    }
+
+    public void lvAttendeeClick() {
+        int selectedPerson = lvAttendees.getSelectionModel().getSelectedIndex()+1;
+        int selectedConcert = lvConcerts.getSelectionModel().getSelectedIndex()+1;
+        boolean selected = lvAttendees.getSelectionModel().isSelected(selectedPerson);
+        changeAttendee(selectedPerson , selectedConcert, selected);
+    }
+
+    public void lvAtConcertsClick() {
+        int selectedPerson = lvPeople.getSelectionModel().getSelectedIndex()+1;
+        int selectedConcert = lvAtConcerts.getSelectionModel().getSelectedIndex()+1;
+        boolean selected = lvAtConcerts.getSelectionModel().isSelected(selectedConcert);
+        changeAttendee(selectedPerson, selectedConcert, selected);
     }
 }
