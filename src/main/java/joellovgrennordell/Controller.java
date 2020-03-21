@@ -35,6 +35,7 @@ public class Controller {
     private ObservableList<String> peopleObsList = FXCollections.observableArrayList();
     private List<List<Integer>> personconcertList = new ArrayList<>();
 
+    //Setup event listener and set the selectionMode to be multiple. Then pass the listView to a handler that makes them act like slectionBoxes
     public void initialize(){
         lvAtConcerts.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         lvAttendees.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -89,6 +90,7 @@ public class Controller {
         });
     }
 
+    //Passes the relationList, listView and what index(person or concert) to highlight.
     private void highlighter(List<List<Integer>> relationList, ListView<String> chosenListView, int index){
         try {
             System.out.println("Highlighting all from: " + index + " personconcertList Size: " + relationList.get(index).size());
@@ -104,6 +106,7 @@ public class Controller {
         }
     }
 
+    //creates two local relationLists based off of attendeeconcert to handle proper highlighting.
     private void attendeeconcertLoad(){
         List<attendeeconcert> tempPersonConcertList = new ArrayList<>();
         List<attendeeconcert> tempConcertPersonList = new ArrayList<>();
@@ -157,6 +160,7 @@ public class Controller {
         }
     }
 
+    //Creates an EntityManager which then creates a temporary new attendeeconcert object (with the appropriate parameters) and then passes it to the DB
     private void changeAttendee(int personID, int concertID, boolean remove){
         System.out.println("Got: " +personID +", " +concertID +" remove: " +remove);
         EntityManager em = ENTITY_MANAGER_FACTORY.createEntityManager();
@@ -189,6 +193,7 @@ public class Controller {
         }
     }
 
+    //Starts a transaction to pass a newly created concert Object to the database
     public void btnAddConcert() {
         EntityManager em = ENTITY_MANAGER_FACTORY.createEntityManager();
         EntityTransaction et = null;
@@ -212,6 +217,7 @@ public class Controller {
         }
     }
 
+    //Same as above but with Person
     public void btnAddPerson(){
         EntityManager em = ENTITY_MANAGER_FACTORY.createEntityManager();
         EntityTransaction et = null;
@@ -235,6 +241,8 @@ public class Controller {
         }
     }
 
+    //Clears the observable lists then repopulates them with the items in the object Lists
+    //Finally sets the listView to the observableLists
     private void updateListings(){
         concertObsList.clear();
         for (joellovgrennordell.concert concert : concertList) {
@@ -255,6 +263,7 @@ public class Controller {
         lvPeople.setItems(peopleObsList);
     }
 
+    //These two functions adds (supposed to change) the attendee or concerts
     public void lvAttendeeClick() {
         int selectedPerson = lvAttendees.getSelectionModel().getSelectedIndex()+1;
         int selectedConcert = lvConcerts.getSelectionModel().getSelectedIndex()+1;
