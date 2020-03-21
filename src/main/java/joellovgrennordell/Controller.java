@@ -12,13 +12,10 @@ import java.util.List;
 import javax.persistence.*;
 
 public class Controller {
-    //TODO
-    // On Attendee/AtConcert list change send equivalent update to Hibernate
 
     //General stuff
     private static final EntityManagerFactory ENTITY_MANAGER_FACTORY = Persistence.createEntityManagerFactory("HibernateConcert");
     private EntityManager em = ENTITY_MANAGER_FACTORY.createEntityManager();
-
 
     //Concert tab
     public TextField txtArtist;
@@ -170,9 +167,12 @@ public class Controller {
             et.begin();
             attendeeconcert ac = new attendeeconcert(personID, concertID);
                 if(remove){
-                    em.remove(ac);
-                    System.out.println("Removed: " +ac.toString());
+                    //TODO
+                    // I can't for the life of me get this to work, so for now removing a listing isn't possible (unless done through the DB).
+                    // em.remove(ac); <--this needs to be in the same transaction, so I'm a bit unsure on how to get it all working.
+                    //System.out.println("Removed: " +ac.toString());
                 }else{
+
                     em.persist(ac);
                     System.out.println("Added: " +ac.toString());
                 }
@@ -258,14 +258,14 @@ public class Controller {
     public void lvAttendeeClick() {
         int selectedPerson = lvAttendees.getSelectionModel().getSelectedIndex()+1;
         int selectedConcert = lvConcerts.getSelectionModel().getSelectedIndex()+1;
-        boolean selected = lvAttendees.getSelectionModel().isSelected(selectedPerson);
+        boolean selected = !lvAttendees.getSelectionModel().isSelected(selectedPerson-1);
         changeAttendee(selectedPerson , selectedConcert, selected);
     }
 
     public void lvAtConcertsClick() {
         int selectedPerson = lvPeople.getSelectionModel().getSelectedIndex()+1;
         int selectedConcert = lvAtConcerts.getSelectionModel().getSelectedIndex()+1;
-        boolean selected = lvAtConcerts.getSelectionModel().isSelected(selectedConcert);
+        boolean selected = !lvAtConcerts.getSelectionModel().isSelected(selectedConcert-1);
         changeAttendee(selectedPerson, selectedConcert, selected);
     }
 }
