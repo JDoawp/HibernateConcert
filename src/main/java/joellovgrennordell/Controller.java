@@ -47,11 +47,11 @@ public class Controller {
         attendeeconcertLoad();
 
         lvPeople.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
-            highlightConcerts(lvPeople.getSelectionModel().getSelectedIndex());
+            highlighter(personconcertList, lvAtConcerts, lvPeople.getSelectionModel().getSelectedIndex());
         });
         lvConcerts.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             System.out.println("Highlight Sent: " +lvConcerts.getSelectionModel().getSelectedIndex());
-            highlightAttendees(lvConcerts.getSelectionModel().getSelectedIndex());
+            highlighter(concertpersonList, lvAttendees, lvConcerts.getSelectionModel().getSelectedIndex());
 
         });
 
@@ -92,38 +92,24 @@ public class Controller {
         });
     }
 
-    private void highlightAttendees(int concert){
+    private void highlighter(List<List<Integer>> relationList, ListView<String> chosenListView, int index){
         try {
-            System.out.println("Highlighting attendees for: " + concert + " personconcertList Size: " + concertpersonList.get(concert).size());
-            lvAttendees.getSelectionModel().clearSelection();
-            for (int i = 0; i < concertpersonList.get(concert).size(); i++) {
-                int personID = concertpersonList.get(concert).get(i) - 1;
-                lvAttendees.getSelectionModel().select(personID);
-                System.out.println("Selecting list item: " + personID);
-            }
-        }catch(IndexOutOfBoundsException e){
-            System.out.println("No attendees");
-            lvAttendees.getSelectionModel().clearSelection();
-        }
-    }
-
-    private void highlightConcerts(int person){
-        try {
-            System.out.println("Highlighting all from: " + person + " personconcertList Size: " + personconcertList.get(person).size());
-            lvAtConcerts.getSelectionModel().clearSelection();
-            for (int i = 0; i < personconcertList.get(person).size(); i++) {
-                int concertID = personconcertList.get(person).get(i) - 1;
-                lvAtConcerts.getSelectionModel().select(concertID);
+            System.out.println("Highlighting all from: " + index + " personconcertList Size: " + relationList.get(index).size());
+            chosenListView.getSelectionModel().clearSelection();
+            for (int i = 0; i < relationList.get(index).size(); i++) {
+                int concertID = relationList.get(index).get(i) - 1;
+                chosenListView.getSelectionModel().select(concertID);
                 System.out.println("Selecting list item: " + concertID);
             }
         }catch(IndexOutOfBoundsException e){
-            System.out.println("No concerts");
-            lvAtConcerts.getSelectionModel().clearSelection();
+            System.out.println("No items");
+            chosenListView.getSelectionModel().clearSelection();
         }
     }
 
     private void attendeeconcertLoad(){
         List<attendeeconcert> tempPersonConcertList = new ArrayList<>();
+        List<attendeeconcert> tempConcertPersonList = new ArrayList<>();
 
         //This entire SQL thing is used because the other commented Hibernate JPA thing doesn't work, the list it gets is wrong and I cannot figure out why. This SQL works though.
         try {
@@ -134,6 +120,14 @@ public class Controller {
             while (result.next()) {
                 tempPersonConcertList.add(new attendeeconcert(result.getInt("personID"), result.getInt("concertID")));
             }
+
+            sql = "SELECT * FROM attendeeconcert ORDER BY concertID";
+            result = st.executeQuery(sql);
+
+            while (result.next()) {
+                tempConcertPersonList.add(new attendeeconcert(result.getInt("personID"), result.getInt("concertID")));
+            }
+
         }catch (SQLException e){
             e.printStackTrace();
         }
@@ -142,23 +136,26 @@ public class Controller {
         personconcertList.clear();
         concertpersonList.clear();
         System.out.println("List gotten: ");
-        for(int i = 0; i < tempPersonConcertList.size(); i++){
-            System.out.println("    PersonID: " +tempPersonConcertList.get(i).getPersonID() +" ConcertID: " +tempPersonConcertList.get(i).getConcertID());
+        for (joellovgrennordell.attendeeconcert attendeeconcert : tempPersonConcertList) {
+            System.out.println("    PersonID: " + attendeeconcert.getPersonID() + " ConcertID: " + attendeeconcert.getConcertID());
+        }
+        System.out.println("---------------");
+        for (joellovgrennordell.attendeeconcert attendeeconcert : tempConcertPersonList) {
+            System.out.println("    ConcertID: " + attendeeconcert.getConcertID() + " PersonID: " + attendeeconcert.getPersonID());
         }
 
         for(int i = 0; i < tempPersonConcertList.size(); i++){
-            if(tempPersonConcertList.get(i).getPersonID() != personconcertList.size()) {
+            if(tempPersonConcertList.get(i).getPersonID() != personconcertList.size()){
                 personconcertList.add(new ArrayList<>());
             }
             personconcertList.get(personconcertList.size()-1).add(tempPersonConcertList.get(i).getConcertID());
-
         }
 
-        for(int i = 0; i < tempPersonConcertList.size(); i++){
-            if(tempPersonConcertList.get(i).getConcertID() != concertpersonList.size()) {
+        for(int i = 0; i < tempConcertPersonList.size(); i++){
+            if(tempConcertPersonList.get(i).getConcertID() != concertpersonList.size()) {
                 concertpersonList.add(new ArrayList<>());
             }
-            concertpersonList.get(concertpersonList.size()-1).add(tempPersonConcertList.get(i).getPersonID());
+            concertpersonList.get(concertpersonList.size()-1).add(tempConcertPersonList.get(i).getPersonID());
 
         }
     }
